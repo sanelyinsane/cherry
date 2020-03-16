@@ -1,11 +1,14 @@
 # cherry
 A Minimalist CGI web framework in C
 
-- **What?** 
+- **What is this?** 
   > A web framework.
 
-- **Why?** 
+- **Why did you made this?** 
   > Why the hell not.
 
-- **How?**
+- **There have been existing ones!**
+  > I know.
+  
+- **How does it work?**
   > Compile the source code and run the result as a CGI app.
