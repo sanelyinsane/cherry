@@ -4,7 +4,10 @@
  * Primary
  */
 void CH_echo(char *msg);
+void CH_get(char* route, void (*handler)(void));
 char *CH_get_query_string(char *key);
+
+void CH_run();
 
 /* 
  * Auxillaries
@@ -12,12 +15,20 @@ char *CH_get_query_string(char *key);
 char *CH_strcat(char *s1, char *s2);
 char *CH_substr(char *str, int offset, int amount);
 
+/*-----------------------------------------------------------------------------
+ *                               Implementation
+ *----------------------------------------------------------------------------*/
+
 void CH_echo(char *msg) {
 	char *res = CH.strcat(NULL, "");
 	res = CH_strcat(res, "Content-type: text/html\n\n");
 	res = CH_strcat(res, msg);
 	res = CH_strcat(res, "\n");
 	printf("%s", res);
+}
+
+void CH_get(char *route, void (*handler)(void)) {
+	handler();
 }
 
 char *CH_get_query_string(char *key) {
@@ -47,6 +58,10 @@ char *CH_get_query_string(char *key) {
 	return res;
 }
 
+void CH_run() {
+	/* TODO: implement this, lol */
+}
+
 char *CH_strcat(char *s1, char *s2) {
 	int len;
 	char *s;
@@ -74,7 +89,9 @@ char *CH_substr(char *str, int offset, int amount) {
 
 namespace_struct const CH = {
 	CH_echo,
+	CH_get,
 	CH_get_query_string,
+	CH_run,
 	CH_strcat,
 	CH_strcat_multiple,
 	CH_substr

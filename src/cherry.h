@@ -25,6 +25,13 @@ typedef struct {
 	void (*echo)(char*);
 
 	/*
+	 * Function: get(char *msg)
+	 * -------------------------
+	 * Outputs a string.
+	 */
+	void (*get)(char*, void (*handler)(void));
+
+	/*
 	 * Function: get_query_string(char* key)
 	 * -------------------------------------
 	 * Get query string value based on the key.
@@ -32,6 +39,8 @@ typedef struct {
 	 * returns: char* containing the value.
 	 */
 	char *(*get_query_string)(char*);
+
+	void (*run)(void);
 
 
 	/*---------------------------------------------------------------------
@@ -68,5 +77,10 @@ typedef struct {
 
 } namespace_struct;
 extern namespace_struct const CH;
+
+typedef struct {
+	void (*get_handler);
+	void (*post_handler);
+} RequestHandler;
 
 #endif
