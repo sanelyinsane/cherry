@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#define MAX_CHAR_BUFF 4096
+
 /*
  * Struct: CH
  * ----------
@@ -29,7 +31,7 @@ typedef struct {
 	 * -------------------------
 	 * Outputs a string.
 	 */
-	void (*get)(char*, void (*handler)(void));
+	void (*get)(char*, char *(*handler)(void));
 
 	/*
 	 * Function: get_query_string(char* key)
@@ -40,7 +42,14 @@ typedef struct {
 	 */
 	char *(*get_query_string)(char*);
 
-	void (*run)(void);
+	/*
+	 * Function: get_request_method()
+	 * ------------------------------
+	 * Get current performed request
+	 *
+	 * returns: char* of either "GET", "POST", "PUT", etc.
+	 */
+	char *(*get_request_method)(void);
 
 
 	/*---------------------------------------------------------------------
@@ -83,4 +92,19 @@ typedef struct {
 	void (*post_handler);
 } RequestHandler;
 
+/* 
+ * Primary
+ */
+void CH_echo(char *msg);
+void CH_get(char* route, char *(*handler)(void));
+char *CH_get_request_method();
+char *CH_get_query_string(char *key);
+
+/* 
+ * Auxillaries
+ */
+char *CH_strcat(char *s1, char *s2);
+char *CH_substr(char *str, int offset, int amount);
+
+int regex_match(const char *string, char *pattern) {
 #endif
