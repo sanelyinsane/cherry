@@ -1,15 +1,22 @@
 #include "cherry.h"
 
-void CH_echo(char *msg) {
-	char *res = CH.strcat(NULL, "");
-	res = CH_strcat(res, "Content-type: text/html\n\n");
-	res = CH_strcat(res, msg);
-	res = CH_strcat(res, "\n");
-	printf("%s", res);
-}
+void CH_handle_get(char *route, char *(*handler)(void), char *mimetype) {
+	char *env_route = CH_route_from_uri(getenv("REQUEST_URI"));
+	if (strlen(env_route) == 0) env_route = "/";
 
-void CH_get(char *route, char *(*handler)(void)) {
-	printf("%s", handler());
+	/*
+	 * TODO: implement a function to convert user-defined route to a regex
+	 */
+	char regex_route[MAX_CHAR_BUFF];
+	strcpy(regex_route, "^");
+	strcat(regex_route, route);
+	strcat(regex_route, "$");
+
+	if ((strcmp(CH_get_request_method(), "GET") == 0) &&
+	    (regex_match(env_route, regex_route))) {
+		CH_print_message_body_info(mimetype, "utf-8");
+		printf("%s", handler());
+	}
 }
 
 char *CH_get_request_method() {
@@ -31,16 +38,26 @@ char *CH_get_query_string(char *key) {
 		char *curr_key = CH_substr(token, 0, eqpos);
 
 		if (strcmp(key, curr_key) == 0) {
-
 			int amount = strlen(token) - eqpos + 1;
 			res = CH_substr(token, eqpos + 1, amount);
-
 			break;
 		}
-
 		token = strtok(NULL, "&");
 	}
 	return res;
+}
+
+void CH_print_message_body_info(char *content_type,
+                                char *content_encoding) {
+	printf("Content-Type: %s\n", content_type);
+	printf("Content-Encoding: %s\n", content_encoding);
+	printf("\n");
+}
+
+char *CH_route_from_uri(char *uri) {
+	char *script_name = getenv("SCRIPT_NAME");
+	char *route = CH_substr(uri, strlen(script_name), strlen(uri));
+	return route;
 }
 
 char *CH_strcat(char *s1, char *s2) {
@@ -68,19 +85,40 @@ char *CH_substr(char *str, int offset, int amount) {
 	return res;
 }
 
-namespace_struct const CH = {
-	/* 
-	 * Primary
-	 */
-	CH_echo,
-	CH_get,
-	CH_get_query_string,
-	CH_get_request_method,
+int regex_match(const char *string, char *pattern) {
+	int status;
+	regex_t re;
 
-	/* 
-	 * Auxillaries
-	 */
-	CH_strcat,
-	CH_strcat_multiple,
-	CH_substr
-};
+	if (regcomp(&re, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
+		return(0);
+	}
+	status = regexec(&re, string, (size_t) 0, NULL, 0);
+	regfree(&re);
+	if (status != 0) {
+		return(0);
+	}
+	return(1);
+}
+
+char *str_replace(char *str, char *orig, char *rep) {
+	static char buffer[MAX_CHAR_BUFF];
+	char *p;
+	int i = 0;
+
+	if (!(p = strstr(str + i, orig))) {
+	return str;
+	}
+
+	while (str[i]) {
+		if (!(p = strstr(str + i, orig))) {
+			strcat(buffer, str + i);
+			break; //return str;
+		}
+		strncpy(buffer + strlen(buffer), str + i, (p - str) - i);
+		buffer[p - str] = '\0';
+		strcat(buffer, rep);
+		i = (p - str) + strlen(orig);
+	}
+
+	return buffer;
+}
