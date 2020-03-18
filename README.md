@@ -1,5 +1,5 @@
 # cherry
-A Minimalist CGI web framework in C
+A Minimalistic CGI web framework in C
 
 - **What is this?** 
   > A web framework.
