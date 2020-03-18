@@ -1,33 +1,20 @@
 #include "cherry.h"
 
-char *route_to_regex(char *route) {
-	/*
-	 * TODO: Convert special route format to POSIX-compatible regex.
-	 */
-	char *regex_route = malloc(MAX_CHAR_BUFF);
-	strcpy(regex_route, "^(");
-	strcat(regex_route, route);
-	strcat(regex_route, ")(\\?([[:alnum:]=]+)?)?$");
-
-	return regex_route;
+/*-----------------------------------------------------------------------------
+ *                              Default handlers
+ *----------------------------------------------------------------------------*/
+char *def_error404handler() {
+	return "404";
 }
 
-void CH_handle_get(char *route, char *(*handler)(void), char *mimetype) {
-	char *env_route = CH_route_from_uri(getenv("REQUEST_URI"));
-	if (strlen(env_route) == 0) env_route = "/";
-
-	char *regex_route = route_to_regex(route);
-
-	if ((strcmp(CH_get_request_method(), "GET") == 0) &&
-	    (regex_match(env_route, regex_route))) {
-		CH_print_message_body_info(mimetype, "utf-8");
-		printf("%s", handler());
-	}
-
-	free(env_route);
-	free(regex_route);
+char *def_error500handler() {
+	return "500";
 }
 
+
+/*-----------------------------------------------------------------------------
+ *                                  Primary
+ *----------------------------------------------------------------------------*/
 char *CH_get_request_method() {
 	return getenv("REQUEST_METHOD");
 }
@@ -56,6 +43,29 @@ char *CH_get_query_string(char *key) {
 	return res;
 }
 
+void CH_handle_get(char *route, char *(*handler)(void), char *mimetype) {
+	char *env_route = CH_route_from_uri(getenv("REQUEST_URI"));
+	if (strlen(env_route) == 0) env_route = "/";
+
+	char *regex_route = route_to_regex(route);
+
+	if ((strcmp(CH_get_request_method(), "GET") == 0) &&
+	    (regex_match(env_route, regex_route))) {
+		MIMETYPE_CANDIDATE        = mimetype;
+		REQUEST_HANDLER_CANDIDATE = handler;
+		NUM_MATCHING_ROUTE++;
+	}
+
+	free(env_route);
+	free(regex_route);
+}
+
+void CH_init() {
+	NUM_MATCHING_ROUTE = 0;
+	ERROR404HANDLER    = def_error404handler;
+	ERROR500HANDLER    = def_error500handler;
+}
+
 void CH_print_message_body_info(char *content_type,
                                 char *content_encoding) {
 	printf("Content-Type: %s\n", content_type);
@@ -67,6 +77,22 @@ char *CH_route_from_uri(char *uri) {
 	char *script_name = getenv("SCRIPT_NAME");
 	char *route = CH_substr(uri, strlen(script_name), strlen(uri));
 	return route;
+}
+
+void CH_run() {
+	if (NUM_MATCHING_ROUTE == 0) {
+		/*
+		 * 404: route not found
+		 */
+		REQUEST_HANDLER_CANDIDATE = ERROR404HANDLER;
+	} else if (NUM_MATCHING_ROUTE > 1) {
+		/*
+		 * 500: duplicate routes
+		 */
+		REQUEST_HANDLER_CANDIDATE = ERROR500HANDLER;
+	} 
+	CH_print_message_body_info(MIMETYPE_CANDIDATE, "utf-8");
+	printf("%s", REQUEST_HANDLER_CANDIDATE());
 }
 
 char *CH_strcat(char *s1, char *s2) {
@@ -107,6 +133,18 @@ int regex_match(const char *string, char *pattern) {
 		return(0);
 	}
 	return(1);
+}
+
+char *route_to_regex(char *route) {
+	/*
+	 * TODO: Convert special route format to POSIX-compatible regex.
+	 */
+	char *regex_route = malloc(MAX_CHAR_BUFF);
+	strcpy(regex_route, "^(");
+	strcat(regex_route, route);
+	strcat(regex_route, ")(\\?([[:alnum:]=]+)?)?$");
+
+	return regex_route;
 }
 
 char *str_replace(char *str, char *orig, char *rep) {

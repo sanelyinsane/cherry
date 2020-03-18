@@ -13,16 +13,27 @@
 #define MIME_TEXT_PLAIN       "text/plain"
 #define MIME_TEXT_HTML        "text/html"
 
+
+/*-----------------------------------------------------------------------------
+ *                                  Globals
+ *----------------------------------------------------------------------------*/
+char *(*ERROR404HANDLER)(void);
+char *(*ERROR500HANDLER)(void);
+int   NUM_MATCHING_ROUTE;
+char *MIMETYPE_CANDIDATE;
+char *(*REQUEST_HANDLER_CANDIDATE)(void);
+
+
+/*-----------------------------------------------------------------------------
+ *                              Default handlers
+ *----------------------------------------------------------------------------*/
+char *def_error404handler();
+char *def_error500handler();
+
+
 /*-----------------------------------------------------------------------------
  *                                  Primary
  *----------------------------------------------------------------------------*/
-
-/*
- * Function: CH_handle_get(char* route, char *(*handler)(void), char*)
- * -------------------------------------------------------------------
- * Handles route with get request method.
- */
-void CH_handle_get(char* route, char *(*handler)(void), char* mimetype);
 
 /*
  * Function: CH_get_request_method()
@@ -43,6 +54,15 @@ char *CH_get_request_method();
 char *CH_get_query_string(char *key);
 
 /*
+ * Function: CH_handle_get(char* route, char *(*handler)(void), char*)
+ * -------------------------------------------------------------------
+ * Handles route with get request method.
+ */
+void CH_handle_get(char* route, char *(*handler)(void), char* mimetype);
+
+void CH_init();
+
+/*
  * Function: CH_route_from_uri(char *uri)
  * --------------------------------------
  * Get query string value based on the key.
@@ -50,6 +70,8 @@ char *CH_get_query_string(char *key);
  * returns: char* containing the value.
  */
 char *CH_route_from_uri(char *uri);
+
+void CH_run();
 
 /*
  * Function: CH_print_message_body_info(char *content_type,
