@@ -53,7 +53,7 @@ char *CH_route_from_uri(char *uri);
 
 /*
  * Function: CH_print_message_body_info(char *content_type,
-                                        char *content_encoding)
+ *                                      char *content_encoding)
  * ------------------------------------------------------------
  * Print the message body info.
  */
@@ -96,6 +96,7 @@ char *CH_substr(char *str, int offset, int amount);
  *                                 Utilities
  *----------------------------------------------------------------------------*/
 int  regex_match(const char *string, char *pattern);
+char *route_to_regex(char *route);
 char *str_replace(char *str, char *orig, char *rep);
 
 #endif

@@ -1,22 +1,31 @@
 #include "cherry.h"
 
+char *route_to_regex(char *route) {
+	/*
+	 * TODO: Convert special route format to POSIX-compatible regex.
+	 */
+	char *regex_route = malloc(MAX_CHAR_BUFF);
+	strcpy(regex_route, "^(");
+	strcat(regex_route, route);
+	strcat(regex_route, ")(\\?([[:alnum:]=]+)?)?$");
+
+	return regex_route;
+}
+
 void CH_handle_get(char *route, char *(*handler)(void), char *mimetype) {
 	char *env_route = CH_route_from_uri(getenv("REQUEST_URI"));
 	if (strlen(env_route) == 0) env_route = "/";
 
-	/*
-	 * TODO: implement a function to convert user-defined route to a regex
-	 */
-	char regex_route[MAX_CHAR_BUFF];
-	strcpy(regex_route, "^");
-	strcat(regex_route, route);
-	strcat(regex_route, "$");
+	char *regex_route = route_to_regex(route);
 
 	if ((strcmp(CH_get_request_method(), "GET") == 0) &&
 	    (regex_match(env_route, regex_route))) {
 		CH_print_message_body_info(mimetype, "utf-8");
 		printf("%s", handler());
 	}
+
+	free(env_route);
+	free(regex_route);
 }
 
 char *CH_get_request_method() {
@@ -106,7 +115,7 @@ char *str_replace(char *str, char *orig, char *rep) {
 	int i = 0;
 
 	if (!(p = strstr(str + i, orig))) {
-	return str;
+		return str;
 	}
 
 	while (str[i]) {
