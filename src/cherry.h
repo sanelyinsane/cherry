@@ -8,10 +8,13 @@
 #include <stdarg.h>
 
 #define MAX_CHAR_BUFF 4096
-
 #define MIME_APPLICATION_JSON "application/json"
 #define MIME_TEXT_PLAIN       "text/plain"
 #define MIME_TEXT_HTML        "text/html"
+#define METHOD_GET            "GET"
+#define METHOD_POST           "POST"
+#define METHOD_PUT            "PUT"
+
 
 
 /*-----------------------------------------------------------------------------
@@ -22,6 +25,8 @@ char *(*ERROR500HANDLER)(void);
 int   NUM_MATCHING_ROUTE;
 char *MIMETYPE_CANDIDATE;
 char *(*REQUEST_HANDLER_CANDIDATE)(void);
+char *ERROR404MSG;
+char *ERROR500MSG;
 
 
 /*-----------------------------------------------------------------------------
@@ -44,6 +49,8 @@ char *def_error500handler();
  */
 char *CH_get_request_method();
 
+char *CH_get_route();
+
 /*
  * Function: CH_get_query_string(char* key)
  * ----------------------------------------
@@ -54,12 +61,23 @@ char *CH_get_request_method();
 char *CH_get_query_string(char *key);
 
 /*
- * Function: CH_handle_get(char* route, char *(*handler)(void), char*)
- * -------------------------------------------------------------------
- * Handles route with get request method.
+ * Function: CH_handle_request(char *method,
+ *                             char *route,
+ *                             char *(*handler)(void),
+ *                             char *mimetype);
+ * ---------------------------------------------------
+ * Handles route according to the determined request method.
  */
-void CH_handle_get(char* route, char *(*handler)(void), char* mimetype);
+void CH_handle_request(char *method,
+                       char *route,
+                       char *(*handler)(void),
+                       char *mimetype);
 
+/*
+ * Function: CH_init();
+ * --------------------
+ * Initialize cherry with defaults
+ */
 void CH_init();
 
 /*

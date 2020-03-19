@@ -4,11 +4,13 @@
  *                              Default handlers
  *----------------------------------------------------------------------------*/
 char *def_error404handler() {
-	return "404";
+	return "404: The page you requested does not exist";
 }
 
 char *def_error500handler() {
-	return "500";
+	char *s = malloc(strlen(ERROR500MSG));
+	sprintf(s, "500: %s", ERROR500MSG);
+	return s;
 }
 
 
@@ -19,10 +21,14 @@ char *CH_get_request_method() {
 	return getenv("REQUEST_METHOD");
 }
 
+char *CH_get_route() {
+	return CH_route_from_uri(getenv("REQUEST_URI"));
+
+}
+
 char *CH_get_query_string(char *key) {
 	char *qs = getenv("QUERY_STRING");
-	if (strlen(key) == 0)
-		return qs;
+	if (strlen(key) == 0) return qs;
 
 	/* the default result when key is not found */
 	char *res = ""; 
@@ -43,20 +49,19 @@ char *CH_get_query_string(char *key) {
 	return res;
 }
 
-void CH_handle_get(char *route, char *(*handler)(void), char *mimetype) {
-	char *env_route = CH_route_from_uri(getenv("REQUEST_URI"));
-	if (strlen(env_route) == 0) env_route = "/";
-
+void CH_handle_request(char *method, char *route, char *(*handler)(void),
+                       char *mimetype) {
+	char *env_route   = CH_get_route();
 	char *regex_route = route_to_regex(route);
 
-	if ((strcmp(CH_get_request_method(), "GET") == 0) &&
+	if (strlen(env_route) == 0) env_route = "/"; 
+
+	if ((strcmp(CH_get_request_method(), method) == 0) &&
 	    (regex_match(env_route, regex_route))) {
 		MIMETYPE_CANDIDATE        = mimetype;
 		REQUEST_HANDLER_CANDIDATE = handler;
 		NUM_MATCHING_ROUTE++;
 	}
-
-	free(env_route);
 	free(regex_route);
 }
 
@@ -64,6 +69,7 @@ void CH_init() {
 	NUM_MATCHING_ROUTE = 0;
 	ERROR404HANDLER    = def_error404handler;
 	ERROR500HANDLER    = def_error500handler;
+	ERROR500MSG        = "";
 }
 
 void CH_print_message_body_info(char *content_type,
@@ -89,10 +95,21 @@ void CH_run() {
 		/*
 		 * 500: duplicate routes
 		 */
+		char *s1  = "Duplicate or ambiguous route: ";
+		char *route = CH_get_route();
+		char *msg = malloc(MAX_CHAR_BUFF);
+		if (strlen(route) == 0) route = "/";
+		strcpy(msg, "");
+		strcat(msg, s1);
+		strcat(msg, route);
+		ERROR500MSG = msg;
+
 		REQUEST_HANDLER_CANDIDATE = ERROR500HANDLER;
+		MIMETYPE_CANDIDATE        = MIME_TEXT_PLAIN;
 	} 
 	CH_print_message_body_info(MIMETYPE_CANDIDATE, "utf-8");
 	printf("%s", REQUEST_HANDLER_CANDIDATE());
+	printf("\n");
 }
 
 char *CH_strcat(char *s1, char *s2) {
